@@ -1,1 +1,3 @@
 venv
+cgan_venv
+cGAN/__pycache__/*
