@@ -9,7 +9,7 @@ import numpy as np
 
 # -- Hyperparameters --
 latent_dim = 100
-num_classes = 10
+num_classes = 26
 image_dim = 28 * 28
 batch_size = 64
 learning_rate = 0.0002
@@ -79,10 +79,11 @@ if __name__ == "__main__":
 
     transform = transforms.Compose([
         transforms.ToTensor(),
-        transforms.Normalize((0.5,), (0.5,))
+        transforms.Normalize((0.5,), (0.5,)),
+        transforms.Lambda(lambda x: x.transpose(1,2))
     ])
 
-    dataset = torchvision.datasets.MNIST(root='./data', train=True, download=True,transform=transform)
+    dataset = torchvision.datasets.EMNIST(root='./data', train=True, download=True,transform=transform, split="letters")
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
     print("Dataset loaded successfully")
@@ -93,8 +94,8 @@ if __name__ == "__main__":
     generator = Generator()
     discriminator = Discriminator()
     criterion = nn.BCELoss()
-    optimizer_G = optim.Adam(generator.parameters(), lr=learning_rate)
-    optimizer_D = optim.Adam(discriminator.parameters(), lr=learning_rate)
+    optimizer_G = optim.Adam(generator.parameters(), lr=learning_rate, betas=(0.5, 0.999))
+    optimizer_D = optim.Adam(discriminator.parameters(), lr=learning_rate, betas=(0.5, 0.999))
 
     print("--- Starting Training ---")
 
@@ -111,7 +112,7 @@ if __name__ == "__main__":
 
             optimizer_D.zero_grad()
 
-            real_preds = discriminator(real_imgs,real_labels)
+            real_preds = discriminator(real_imgs,real_labels-1)
             d_real_loss = criterion(real_preds, valid_target)
 
             z = torch.randn(current_batch_size, latent_dim)
@@ -142,5 +143,5 @@ if __name__ == "__main__":
                     f"[D loss: {d_loss.item():.4f}] [G loss: {g_loss.item():.4f}]")
                 
     # Add this to the very bottom of number_generator.py
-    torch.save(generator.state_dict(), "cgan_generator.pth")
-    print("Model saved to cgan_generator.pth!")
+    torch.save(generator.state_dict(), "alpha_gen_v2.pth")
+    print("Model saved to alpha_gen_v2.pth!")
